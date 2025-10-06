@@ -1,25 +1,21 @@
-// src/pages/SlotsPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { get, post } from "../api/lib/api";
 import EventHeader from "../components/EventHeader";
 
 function fmt(dt) {
-  // dt: "2025-10-12T18:00:00Z" veya "2025-10-12 18:00:00"
   const d = new Date(dt.replace(" ", "T").replace("Z", "") + "Z");
   return d.toLocaleString();
 }
 
 export default function SlotsPage({ eventId, userId }) {
   const [title, setTitle] = useState("");
-  const [slots, setSlots] = useState([]); // [{slotId,start,end, yesCount,noCount, myChoice}]
+  const [slots, setSlots] = useState([]);
   const [form, setForm] = useState({ date: "", start: "", end: "" });
   const [loading, setLoading] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
     try {
-      // BE: GET /events/{id}/slots → [{slotId,start,end,yesCount,noCount,myChoice}]
-      // (Eğer hazır değilse hızlıca ekleyebilirsin; vote sayıları summary’den de hesaplanabilir.)
       const list = await get(`/events/${eventId}/slots`);
       const ev = await get(`/events/${eventId}/summary`);
       setTitle(ev.title);
@@ -37,7 +33,6 @@ export default function SlotsPage({ eventId, userId }) {
     e.preventDefault();
     if (!form.date || !form.start || !form.end) return;
 
-    // optimistic
     const tempId = `tmp_${Date.now()}`;
     const optimistic = {
       slotId: tempId,
@@ -57,13 +52,11 @@ export default function SlotsPage({ eventId, userId }) {
       setForm({ date: "", start: "", end: "" });
       refresh();
     } catch {
-      // geri al
       setSlots((s) => s.filter((x) => x.slotId !== tempId));
     }
   };
 
   const vote = async (slotId, choice) => {
-    // optimistic sayacı güncelle
     setSlots((s) =>
       s.map((x) => {
         if (x.slotId !== slotId) return x;
@@ -131,7 +124,6 @@ export default function SlotsPage({ eventId, userId }) {
           </button>
         </form>
 
-        {/* Önerilen tarih */}
         {best && (
           <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700">
             Önerilen tarih: <b>{fmt(best.start)}</b> – <b>{fmt(best.end)}</b> (✓{" "}
@@ -139,7 +131,6 @@ export default function SlotsPage({ eventId, userId }) {
           </div>
         )}
 
-        {/* Slot listesi */}
         <div className="grid gap-3">
           {slots.map((s) => (
             <div key={s.slotId} className="bg-white p-4 rounded-xl border">

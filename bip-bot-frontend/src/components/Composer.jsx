@@ -1,17 +1,15 @@
-// components/Composer.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const COOLDOWN_MS = 2000; // sadece "/" ile başlayan komutlar için 2 sn
+const COOLDOWN_MS = 2000;
 
 export default function Composer({ onSend, commands = [] }) {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const [cooldownUntil, setCooldownUntil] = useState(0); // epoch ms
+  const [cooldownUntil, setCooldownUntil] = useState(0);
   const [now, setNow] = useState(Date.now());
   const taRef = useRef(null);
 
-  // cooldown göstergesini canlı tut
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
@@ -19,7 +17,6 @@ export default function Composer({ onSend, commands = [] }) {
   const remainingMs = Math.max(0, cooldownUntil - now);
   const remainingSec = Math.ceil(remainingMs / 1000);
 
-  // 1) Komut listesini sadece köklere indir ("/komut"), sırayı koru ve teke düşür
   const baseCommands = useMemo(() => {
     const seen = new Set();
     const bases = [];
@@ -36,13 +33,11 @@ export default function Composer({ onSend, commands = [] }) {
     return bases;
   }, [commands]);
 
-  // 2) Kullanıcının yazdığı metin '/' ile başlıyorsa query üret
   const query = useMemo(() => {
     const t = text.trimStart();
     return t.startsWith("/") ? t.slice(1) : null;
   }, [text]);
 
-  // 3) Filtreli öneri listesi (sadece komut kökleri)
   const list = useMemo(() => {
     if (query === null) return [];
     const q = query.toLowerCase();
@@ -68,7 +63,6 @@ export default function Composer({ onSend, commands = [] }) {
   };
 
   const applySuggestion = (cmdBase) => {
-    // yalnızca kök + boşluk
     const next = cmdBase + " ";
     setText(next);
     setOpen(false);
@@ -79,16 +73,13 @@ export default function Composer({ onSend, commands = [] }) {
     const t = text.trim();
     if (!t) return;
 
-    // öneri açıksa ve slash ile başlıyorsa önce seçili öneriyi uygula
     if (open && list.length > 0 && t.startsWith("/")) {
       applySuggestion(list[active]);
       return;
     }
 
-    // Komutsa ve cooldown devam ediyorsa engelle
     if (t.startsWith("/")) {
       if (Date.now() < cooldownUntil) {
-        // sadece görsel uyarı; gönderme
         return;
       }
       setCooldownUntil(Date.now() + COOLDOWN_MS);
@@ -137,7 +128,6 @@ export default function Composer({ onSend, commands = [] }) {
           className="w-full resize-none rounded-2xl border border-slate-300 px-4 py-2 outline-none focus:ring-2 focus:ring-sky-400"
         />
 
-        {/* Slash komut paleti (sadece /komut) */}
         {open && (
           <div className="absolute left-0 bottom-12 z-20 w-[420px] max-w-[90vw] rounded-xl border border-slate-200 bg-white shadow-xl">
             <div className="px-3 py-2 text-xs text-slate-500 border-b">
@@ -168,7 +158,6 @@ export default function Composer({ onSend, commands = [] }) {
           </div>
         )}
 
-        {/* Cooldown uyarısı (sadece komutlarda) */}
         {sendDisabled && (
           <div className="mt-2 text-xs text-amber-600">
             Çok hızlısın 🙂 Komutlar için lütfen {remainingSec} sn bekle.

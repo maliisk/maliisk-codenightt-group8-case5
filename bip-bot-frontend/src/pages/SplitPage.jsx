@@ -1,11 +1,10 @@
-// src/pages/SplitPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { get, post } from "../api/lib/api";
 import EventHeader from "../components/EventHeader";
 
 export default function SplitPage({ eventId, userId }) {
   const [title, setTitle] = useState("");
-  const [summary, setSummary] = useState(null); // {balances:{userId:amount}, total}
+  const [summary, setSummary] = useState(null);
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [weight, setWeight] = useState("1");
@@ -49,7 +48,6 @@ export default function SplitPage({ eventId, userId }) {
       <EventHeader eventId={eventId} title={title} onRefresh={refresh} />
 
       <div className="p-4 grid md:grid-cols-[420px_1fr] gap-4">
-        {/* Gider ekleme */}
         <div className="bg-white p-4 rounded-xl border">
           <div className="text-sm text-slate-500 mb-2">Gider ekle</div>
           <form onSubmit={addExpense} className="grid gap-2">
@@ -87,7 +85,6 @@ export default function SplitPage({ eventId, userId }) {
           </div>
         </div>
 
-        {/* Bakiye tablosu */}
         <div className="bg-white p-4 rounded-xl border">
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm text-slate-500">Toplam</div>
@@ -129,7 +126,6 @@ export default function SplitPage({ eventId, userId }) {
             </table>
           </div>
 
-          {/* Basit uzlaştırma önerisi (bonus) */}
           {rows.length >= 2 && (
             <div className="mt-4 text-sm text-slate-600">
               <div className="font-medium mb-1">Öneri:</div>

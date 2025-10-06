@@ -24,7 +24,6 @@ public class MessageLog {
     @Column(name = "user_id", nullable = false, length = 191)
     private String userId;
 
-    /** ÖNEMLİ: columnDefinition kullanmadan @Lob -> MySQL'de LONGTEXT */
     @Lob
     @Column(name = "text", nullable = false)
     private String text;
@@ -35,12 +34,10 @@ public class MessageLog {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    // --- YENİ ALANLAR ---
-    /** Sadece moderatörün görmesi gereken bot mesajları için işaret */
     @Column(name = "mod_only")
-    private Boolean modOnly;     // null/false: herkes görür, true: sadece moderatör
+    private Boolean modOnly;
 
-    /** Sistem/bot mesajı işareti (reserved 'system' yerine güvenli kolon adı) */
+
     @Column(name = "system_flag")
-    private Boolean systemFlag;  // null/false: normal, true: sistem/bot
+    private Boolean systemFlag;
 }

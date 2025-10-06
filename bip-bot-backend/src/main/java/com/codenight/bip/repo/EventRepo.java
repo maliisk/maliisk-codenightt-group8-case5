@@ -9,10 +9,8 @@ import java.util.Optional;
 
 public interface EventRepo extends JpaRepository<Event, Long> {
 
-    // Belirli bir grup için en son oluşturulan etkinlik
     Optional<Event> findTopByGroupIdOrderByCreatedAtDesc(String groupId);
 
-    // Tüm farklı grup ID'leri (UI için listeleme vb.)
     @Query("select distinct e.groupId from Event e")
     List<String> findDistinctGroupIds();
 }

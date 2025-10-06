@@ -7,7 +7,7 @@ import lombok.*;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User {
     @Id
-    private String userId; // tel veya uniq id
+    private String userId;
     private String name;
 
     @Enumerated(EnumType.STRING)

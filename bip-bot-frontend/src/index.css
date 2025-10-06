@@ -1,7 +1,5 @@
-/* v4 stili: tek satır import */
 @import "tailwindcss";
 
-/* Scrollbar ve balon kuyruğu gibi özeller */
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;

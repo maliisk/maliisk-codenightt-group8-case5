@@ -19,18 +19,15 @@ public class Event {
     private Long eventId;
 
     private String title;
-    private String createdBy;   // userId
-    private String groupId;     // BiP grup id
+    private String createdBy;
+    private String groupId;
     private Instant createdAt;
 
-    // Hatırlatıcı işaretleri (null/false -> henüz gönderilmedi)
     private Boolean reminded24;
     private Boolean reminded1;
 
-    // Moderatörün zorunlu slot seçimi (eşitlik veya manuel seçim)
     private Long forcedSlotId;
 
-    // /yayınla sonrası katılımcılara anketi açmak için
     @Builder.Default
     @Column(nullable = false)
     private boolean published = false;

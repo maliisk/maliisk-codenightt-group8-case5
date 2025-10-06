@@ -48,7 +48,6 @@ export default function CardPoll({ eventId, userId }) {
 
   const vote = async (choiceId) => {
     if (!poll) return;
-    // optimistic tek oy
     setPoll((p) => {
       const prev = p.myChoiceId;
       return {

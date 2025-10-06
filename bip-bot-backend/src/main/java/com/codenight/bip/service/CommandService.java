@@ -30,7 +30,6 @@ public class CommandService {
     @Value("${app.rate-limit-ms}")
     long rateLimitMs;
 
-    // userId|groupId -> last ts
     private final Map<String, Long> lastCmd = new ConcurrentHashMap<>();
 
     public Map<String, Object> handle(CommandMsg m) {
@@ -45,7 +44,6 @@ public class CommandService {
         final String t = Optional.ofNullable(m.text()).orElse("").trim();
 
         try {
-            /* ------------------------ /yeni ------------------------ */
             if (t.startsWith("/yeni")) {
                 String title = t.replaceFirst("/yeni", "").trim();
                 var e = eventService.create(new CreateEventReq(title, m.userId(), m.groupId()));
@@ -53,20 +51,18 @@ public class CommandService {
                         "ok", true,
                         "eventId", e.getEventId(),
                         "text", "🆕 Etkinlik oluşturuldu: #" + e.getEventId() + " " + e.getTitle(),
-                        "modOnly", true   // sadece moderatör chatinde görünsün
+                        "modOnly", true
                 );
             }
 
-            /* ------------------------ /slot ------------------------ */
             if (t.startsWith("/slot")) {
-                // /slot 2025-10-12 18:00-20:00
                 var e = lastEventForGroup(m.groupId());
                 var parts = t.split("\\s+");
                 if (parts.length < 3) {
                     return Map.of("ok", false, "text", "Kullanım: /slot YYYY-MM-DD HH:mm-HH:mm", "modOnly", true);
                 }
                 String date = parts[1];
-                String range = parts[2]; // 18:00-20:00
+                String range = parts[2];
                 var se = range.split("-");
                 Instant start = Instant.parse(date + "T" + se[0] + ":00Z");
                 Instant end   = Instant.parse(date + "T" + se[1] + ":00Z");
@@ -74,9 +70,7 @@ public class CommandService {
                 return Map.of("ok", true, "text", "⏱️ Slot eklendi #" + s.getSlotId(), "modOnly", true);
             }
 
-            /* ------------------------ /katıl ----------------------- */
             if (t.startsWith("/katıl")) {
-                // /katıl slot=2 yes|no (default yes)
                 var e = lastEventForGroup(m.groupId());
                 long slotId = Long.parseLong(extract(t, "slot=(\\d+)", "0"));
                 if (slotId == 0) {
@@ -87,9 +81,8 @@ public class CommandService {
                 return Map.of("ok", true, "text", "✅ Oy kaydedildi (slot " + slotId + ", " + ch + ")", "modOnly", true);
             }
 
-            /* ------------------------ /mekan ----------------------- */
+
             if (t.startsWith("/mekan")) {
-                // /mekan Ek Bina Kafe  → yoksa poll aç, varsa seçenek ekle
                 var e = lastEventForGroup(m.groupId());
                 String place = t.replaceFirst("/mekan", "").trim();
                 if (place.isBlank()) {
@@ -99,9 +92,8 @@ public class CommandService {
                 return Map.of("ok", true, "text", "📍 Mekân oylaması güncellendi: " + place, "modOnly", true);
             }
 
-            /* ------------------------- /oy ------------------------- */
+
             if (t.startsWith("/oy")) {
-                // /oy choice=3
                 var e = lastEventForGroup(m.groupId());
                 long choiceId = Long.parseLong(extract(t, "choice=(\\d+)", "0"));
                 if (choiceId == 0) return Map.of("ok", false, "text", "Kullanım: /oy choice=<id>", "modOnly", true);
@@ -109,7 +101,7 @@ public class CommandService {
                 return Map.of("ok", true, "text", "🗳️ Oy verildi (choice " + choiceId + ")", "modOnly", true);
             }
 
-            /* ----------------------- /gider ------------------------ */
+
             if (t.startsWith("/gider")) {
                 // /gider 450 "Pizza" weight=1
                 var e = lastEventForGroup(m.groupId());
@@ -123,9 +115,7 @@ public class CommandService {
                 return Map.of("ok", true, "text", "💸 Gider eklendi: " + amount + " (" + notes + ")", "modOnly", true);
             }
 
-            /* ------------------------ /mod ------------------------- */
             if (t.startsWith("/mod")) {
-                // /mod slot=<id>  (sadece moderatör)
                 var e = lastEventForGroup(m.groupId());
                 if (!isModerator(m.userId()) && !Objects.equals(e.getCreatedBy(), m.userId())) {
                     return Map.of("ok", false, "text", "Bu komut sadece moderatör için.", "modOnly", true);
@@ -137,9 +127,7 @@ public class CommandService {
                 return Map.of("ok", true, "text", "🔒 Moderatör slot #" + slotId + " olarak kilitledi.", "modOnly", true);
             }
 
-            /* ---------------------- /yayınla ----------------------- */
             if (t.startsWith("/yayınla")) {
-                // anketi/paneli tüm katılımcılara aç
                 var e = lastEventForGroup(m.groupId());
                 if (!isModerator(m.userId()) && !Objects.equals(e.getCreatedBy(), m.userId())) {
                     return Map.of("ok", false, "text", "Bu komut sadece moderatör için.", "modOnly", true);
@@ -149,14 +137,12 @@ public class CommandService {
                 return Map.of("ok", true, "text", "📢 Anket/panel yayınlandı. Katılımcılar oy verebilir.", "modOnly", false);
             }
 
-            /* ------------------------ /ozet ------------------------ */
             if (t.startsWith("/ozet")) {
                 var e = lastEventForGroup(m.groupId());
                 var s = eventService.summary(e.getEventId());
                 return Map.of("ok", true, "text", s.toPrettyText(), "modOnly", true);
             }
 
-            /* --------------------- default/help -------------------- */
             return Map.of(
                     "ok", false,
                     "text", "Komut bulunamadı. /yeni, /slot, /katıl, /mekan, /oy, /gider, /mod, /yayınla, /ozet",
@@ -168,7 +154,6 @@ public class CommandService {
         }
     }
 
-    /* ======================== Helpers ========================== */
 
     private Event lastEventForGroup(String groupId) {
         return eventRepo.findTopByGroupIdOrderByCreatedAtDesc(groupId)

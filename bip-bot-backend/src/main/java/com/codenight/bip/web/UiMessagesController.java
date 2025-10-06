@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/ui/messages/v2") // <<< /ui/messages ile ÇATIŞMAZ
+@RequestMapping("/ui/messages/v2") //
 @RequiredArgsConstructor
 public class UiMessagesController {
 

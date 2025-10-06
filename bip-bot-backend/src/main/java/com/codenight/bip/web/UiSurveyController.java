@@ -36,18 +36,15 @@ public class UiSurveyController {
     private final PollVoteRepo voteRepo;
     private final ExpenseRepo expenseRepo;
 
-    /** Yayınlanmış anket/panel durumunu döner (yayınlanmamışsa SurveyDto.none()) */
     @GetMapping("/survey")
     public SurveyDto getSurvey(@RequestParam String groupId,
                                @RequestParam String userId) {
 
-        // Gruptaki en son etkinlik
         Event ev = eventRepo.findTopByGroupIdOrderByCreatedAtDesc(groupId).orElse(null);
         if (ev == null || !ev.isPublished()) {
             return SurveyDto.none();
         }
 
-        // Slotlar + YES sayıları — EVENT FİLTRESİ ŞART!
         var slots = slotRepo.findByEvent_EventId(ev.getEventId()).stream()
                 .map(s -> new SurveyDto.SlotItem(
                         s.getSlotId(), s.getStartTime(), s.getEndTime(),
@@ -55,7 +52,6 @@ public class UiSurveyController {
                 ))
                 .toList();
 
-// İlk poll + seçenekler + oy sayıları (bu taraf zaten doğruysa dokunmayın)
         var poll = pollRepo.findFirstByEvent_EventIdOrderByPollIdAsc(ev.getEventId()).orElse(null);
         List<SurveyDto.ChoiceItem> choices = List.of();
         if (poll != null) {
@@ -67,7 +63,6 @@ public class UiSurveyController {
                     .toList();
         }
 
-        // Kullanıcının mevcut cevapları
         Long mySlotId = slotVoteRepo
                 .findByEvent_EventIdAndUserId(ev.getEventId(), userId).stream()
                 .filter(v -> v.getChoice() == Choice.YES)
@@ -101,13 +96,11 @@ public class UiSurveyController {
         );
     }
 
-    /** Kullanıcının anket/panel yanıtlarını kaydeder */
     @PostMapping("/survey/submit")
     @Transactional
     public Map<String, Object> submit(@RequestBody SurveySubmitReq req) {
         var ev = eventRepo.findById(req.eventId()).orElseThrow();
 
-        // 1) Slot tercihi (YES olarak işaretle)
         if (req.slotId() != null) {
             var slot = slotRepo.findById(req.slotId()).orElseThrow();
             var v = slotVoteRepo
@@ -117,7 +110,6 @@ public class UiSurveyController {
             slotVoteRepo.save(v);
         }
 
-        // 2) Mekân oyu (tek oy kuralı: varsa sil, yenisini yaz)
         if (req.choiceId() != null) {
             var ch = choiceRepo.findById(req.choiceId()).orElseThrow();
             voteRepo.findByPoll_PollIdAndUserId(ch.getPoll().getPollId(), req.userId())
@@ -129,7 +121,6 @@ public class UiSurveyController {
                     .build());
         }
 
-        // 3) Masrafa ortaklık / tutar
         if (req.participate() != null) {
             var existing = expenseRepo.findByEvent_EventIdAndUserId(ev.getEventId(), req.userId());
             if (Boolean.TRUE.equals(req.participate())) {
@@ -147,19 +138,16 @@ public class UiSurveyController {
         return Map.of("ok", true);
     }
 
-    /** Moderatör için özet sonuçlar (yalnızca sayılar) */
     @GetMapping("/survey/results")
     public Map<String, Object> results(@RequestParam String groupId,
                                        @RequestParam String requesterId) {
         Event ev = eventRepo.findTopByGroupIdOrderByCreatedAtDesc(groupId)
                 .orElseThrow(() -> new IllegalStateException("Bu grupta etkinlik yok."));
 
-        // Sadece moderatör (etkinliği oluşturan) görebilir
         if (!Objects.equals(ev.getCreatedBy(), requesterId)) {
             return Map.of("ok", false, "error", "Yetkisiz: sadece moderatör görebilir.");
         }
 
-        // Slotlar + YES/NO sayıları
         var slotItems = slotRepo.findByEvent_EventId(ev.getEventId()).stream()
                 .map(s -> Map.<String, Object>of(
                         "slotId", s.getSlotId(),
@@ -170,7 +158,6 @@ public class UiSurveyController {
                 ))
                 .toList();
 
-        // Mekân oylaması (seçenek + oy sayısı)
         var poll = pollRepo.findFirstByEvent_EventIdOrderByPollIdAsc(ev.getEventId()).orElse(null);
         List<Map<String, Object>> choiceItems = List.of();
         if (poll != null) {
@@ -183,7 +170,6 @@ public class UiSurveyController {
                     .toList();
         }
 
-        // Masraf katılımı (kim, ne kadar)
         var expenses = expenseRepo.findByEvent_EventId(ev.getEventId()).stream()
                 .map(ex -> Map.<String, Object>of(
                         "userId", ex.getUserId(),

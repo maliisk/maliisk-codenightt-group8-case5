@@ -42,7 +42,6 @@ export default function MessageList({
   surveySubmitting,
   isModerator,
 }) {
-  // günlere göre gruplama
   const items = [];
   let lastDay = "";
   for (const m of messages) {
@@ -58,7 +57,6 @@ export default function MessageList({
     items.push({ type: "msg", ...m });
   }
 
-  // küçük yardımcı – SurveyDto’dan tarih string’ini al
   const toDate = (val) => (val ? new Date(val) : null);
 
   return (
@@ -72,7 +70,6 @@ export default function MessageList({
           )
         )}
 
-        {/* Moderatör ise: ÖZET PANELİ */}
         {isModerator && survey?.eventId && (
           <div className="mt-6 mr-auto" style={{ maxWidth: 720 }}>
             {console.debug("survey", survey)}
@@ -81,7 +78,6 @@ export default function MessageList({
                 📊 Anket Sonuçları — {survey.title}
               </div>
 
-              {/* Slot sonuçları */}
               {Array.isArray(survey.slots) && survey.slots.length > 0 && (
                 <div className="mb-3">
                   <div className="text-sm text-slate-600 mb-1">
@@ -89,7 +85,6 @@ export default function MessageList({
                   </div>
                   <ul className="space-y-1">
                     {survey.slots.map((s) => {
-                      // backend: startTime / endTime — fallback: start / end
                       const startIso = s.startTime ?? s.start;
                       const endIso = s.endTime ?? s.end;
                       const start = toDate(startIso);
@@ -120,7 +115,6 @@ export default function MessageList({
                 </div>
               )}
 
-              {/* Mekân oyları */}
               {Array.isArray(survey.choices) && survey.choices.length > 0 && (
                 <div className="mb-1">
                   <div className="text-sm text-slate-600 mb-1">
@@ -145,7 +139,6 @@ export default function MessageList({
           </div>
         )}
 
-        {/* Katılımcı ise: cevaplama sihirbazı */}
         {!isModerator && survey?.eventId && !survey.submitted && (
           <div className="mt-4 mr-auto" style={{ maxWidth: 720 }}>
             <CardSurveyWizard

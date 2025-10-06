@@ -43,7 +43,6 @@ export default function CardSurveyWizard({ survey, onSubmit, submitting }) {
         {survey.title || "Etkinlik"}
       </div>
 
-      {/* SONUÇ görünümü (submitten sonra veya submitted=true geldiyse) */}
       {survey.submitted ? (
         <div className="mt-3">
           <div className="text-sm text-slate-600 mb-2">Cevabınız alındı ✅</div>
@@ -73,7 +72,6 @@ export default function CardSurveyWizard({ survey, onSubmit, submitting }) {
         </div>
       ) : (
         <>
-          {/* STEP 1: Tarih slotu */}
           {step === 1 && (
             <div className="mt-3">
               <div className="text-sm font-medium text-slate-800 mb-2">
@@ -110,7 +108,6 @@ export default function CardSurveyWizard({ survey, onSubmit, submitting }) {
             </div>
           )}
 
-          {/* STEP 2: Mekân */}
           {step === 2 && (
             <div className="mt-3">
               <div className="text-sm font-medium text-slate-800 mb-2">
@@ -151,7 +148,6 @@ export default function CardSurveyWizard({ survey, onSubmit, submitting }) {
             </div>
           )}
 
-          {/* STEP 3: Masraf */}
           {step === 3 && (
             <div className="mt-3">
               <div className="text-sm font-medium text-slate-800 mb-2">

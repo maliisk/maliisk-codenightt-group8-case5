@@ -13,9 +13,9 @@ import java.util.Map;
 public class SummaryDto {
     private Long eventId;
     private String title;
-    private Slot winnerSlot;        // önerilen tarih
-    private PollChoice winnerPlace; // önerilen mekan
-    private BigDecimal total;       // toplam gider
+    private Slot winnerSlot;
+    private PollChoice winnerPlace;
+    private BigDecimal total;
     private Map<String, BigDecimal> balances;
 
     public String toShortText(){

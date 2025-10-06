@@ -20,7 +20,6 @@ public class WebhookController {
 
     @PostMapping("/bip")
     public Map<String, Object> bip(@RequestBody CommandMsg msg) {
-        // 1) Kullanıcı mesajını logla
         messageRepo.save(MessageLog.builder()
                 .groupId(msg.groupId())
                 .userId(msg.userId())
@@ -29,10 +28,8 @@ public class WebhookController {
                 .createdAt(Instant.now())
                 .build());
 
-        // 2) Komutu çalıştır
         Map<String, Object> out = commandService.handle(msg);
 
-        // 3) Bot cevabını logla
         String botText = String.valueOf(out.getOrDefault("text", ""));
         messageRepo.save(MessageLog.builder()
                 .groupId(msg.groupId())

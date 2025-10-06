@@ -22,5 +22,5 @@ public class Expense {
     private String notes;
 
     @Column(precision = 16, scale = 2)
-    private BigDecimal weight; // null → 1
+    private BigDecimal weight; 
 }

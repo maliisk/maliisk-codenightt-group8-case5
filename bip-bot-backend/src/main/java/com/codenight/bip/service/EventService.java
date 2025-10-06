@@ -27,7 +27,7 @@ public class EventService {
     private final PollVoteRepo voteRepo;
     private final ExpenseRepo expenseRepo;
 
-    /* EVENTS */
+
     public Event create(CreateEventReq req) {
         Event e = Event.builder()
                 .title(req.title())
@@ -38,7 +38,6 @@ public class EventService {
         return eventRepo.save(e);
     }
 
-    /* SLOTS */
     public Slot addSlot(Long eventId, AddSlotReq req) {
         Event e = eventRepo.findById(eventId).orElseThrow();
         Slot s = Slot.builder()
@@ -63,7 +62,7 @@ public class EventService {
         slotVoteRepo.save(v);
     }
 
-    /* POLL */
+
     public Poll createPoll(Long eventId, CreatePollReq req) {
         Event e = eventRepo.findById(eventId).orElseThrow();
         Poll p = pollRepo.save(Poll.builder().event(e).question(req.question()).locked(false).build());
@@ -73,25 +72,19 @@ public class EventService {
         return p;
     }
 
-    /**
-     * Mekân anketi yoksa oluşturur; varsa aynı şık yoksa ekler.
-     * (Komut: /mekan <yer>)
-     */
+
     public void createOrAppendPlaceChoice(Long eventId, String placeText) {
         final String QUESTION = "Mekan seçimi";
 
-        // Etkinlikte kilitli olmayan "Mekan seçimi" anketini bul
         Optional<Poll> maybe = pollRepo.findByEvent_EventIdAndQuestionAndLockedFalse(eventId, QUESTION);
 
         if (maybe.isEmpty()) {
-            // Yoksa, tek seçenekle yeni anket aç
             createPoll(eventId, new CreatePollReq(QUESTION, List.of(placeText)));
             return;
         }
 
         Poll poll = maybe.get();
 
-        // Aynı metin zaten var mı?
         boolean exists = choiceRepo.existsByPoll_PollIdAndTextIgnoreCase(poll.getPollId(), placeText);
         if (!exists) {
             PollChoice ch = new PollChoice();
@@ -106,14 +99,13 @@ public class EventService {
         if (!Objects.equals(c.getPoll().getEvent().getEventId(), eventId))
             throw new IllegalArgumentException("poll mismatch");
 
-        // tek oy kuralı
         voteRepo.findByPoll_PollIdAndUserId(c.getPoll().getPollId(), req.userId())
                 .ifPresent(voteRepo::delete);
 
         voteRepo.save(PollVote.builder().poll(c.getPoll()).choice(c).userId(req.userId()).build());
     }
 
-    /* EXPENSE */
+
     public Expense addExpense(Long eventId, AddExpenseReq req) {
         Event e = eventRepo.findById(eventId).orElseThrow();
         Expense ex = Expense.builder()
@@ -126,22 +118,20 @@ public class EventService {
         return expenseRepo.save(ex);
     }
 
-    /* SUMMARY */
+
     @Transactional(readOnly = true)
     public SummaryDto summary(Long eventId) {
         Event e = eventRepo.findById(eventId).orElseThrow();
 
-        // 1) Slot winner (en çok YES) + moderatör kilidi varsa öncelik
         List<Slot> slots = slotRepo.findByEvent_EventId(eventId);
         Slot winner = null;
         long maxYes = -1;
 
-        // Moderatör manuel seçim yaptıysa onu kullan
         if (e.getForcedSlotId() != null) {
             Slot forced = slotRepo.findById(e.getForcedSlotId()).orElse(null);
             if (forced != null && Objects.equals(forced.getEvent().getEventId(), eventId)) {
                 winner = forced;
-                maxYes = Long.MAX_VALUE; // her daim kazansın
+                maxYes = Long.MAX_VALUE;
             }
         }
 
@@ -150,7 +140,6 @@ public class EventService {
             if (yes > maxYes) { maxYes = yes; winner = s; }
         }
 
-        // 2) Poll winner (ilk poll)
         Optional<Poll> maybePoll = pollRepo.findFirstByEvent_EventIdOrderByPollIdAsc(eventId);
         PollChoice topChoice = null;
         long maxVotes = -1;
@@ -162,7 +151,6 @@ public class EventService {
             }
         }
 
-        // 3) Split/balances
         List<Expense> expenses = expenseRepo.findByEvent_EventId(eventId);
         BigDecimal total = expenses.stream().map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -191,13 +179,13 @@ public class EventService {
         for (String u : users) {
             BigDecimal s = spent.getOrDefault(u, BigDecimal.ZERO);
             BigDecimal p = pay.getOrDefault(u, BigDecimal.ZERO);
-            balances.put(u, s.subtract(p)); // + alacak, - borç
+            balances.put(u, s.subtract(p));
         }
 
         return new SummaryDto(e.getEventId(), e.getTitle(), winner, topChoice, total, balances);
     }
 
-    /* ---- Helpers (controller için) ---- */
+
     public Optional<Poll> getFirstPoll(Long eventId){
         return pollRepo.findFirstByEvent_EventIdOrderByPollIdAsc(eventId);
     }

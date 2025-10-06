@@ -1,4 +1,3 @@
-// src/components/EventHeader.jsx
 import { post } from "../api/lib/api";
 
 export default function EventHeader({

@@ -20,15 +20,11 @@ public class UiController {
     private final EventRepo eventRepo;
     private final MessageRepo messageRepo;
 
-    /* -------------------------- CHATS -------------------------- */
 
-    /** Kullanıcının göreceği sohbet listesi (basit sürüm: tüm gruplar) */
     @GetMapping("/chats")
     public List<ChatDto> chats(@RequestParam String userId) {
-        // events'ten distinct groupId’leri al
         List<String> groups = eventRepo.findDistinctGroupIds();
 
-        // Her grup için son event başlığını title olarak kullan
         Map<String, String> lastTitle = eventRepo.findAll().stream()
                 .collect(Collectors.groupingBy(
                         e -> e.getGroupId(),
@@ -40,33 +36,26 @@ public class UiController {
 
         return groups.stream()
                 .map(g -> new ChatDto(
-                        g,                                  // id
-                        Optional.ofNullable(lastTitle.get(g)).orElse("Grup " + g), // title
-                        g                                   // groupId
+                        g,
+                        Optional.ofNullable(lastTitle.get(g)).orElse("Grup " + g),
+                        g
                 ))
                 .toList();
     }
 
-    /* ------------------------ MESSAGES ------------------------- */
 
-    /**
-     * Mesajları döner. Moderatör değilse {@code modOnly=true} bot mesajları filtrelenir.
-     * Frontend mutlaka {@code userId} göndermelidir.
-     */
     @GetMapping("/messages")
     public List<UiMessageDto> messages(@RequestParam String groupId,
                                        @RequestParam(required = false) String userId) {
 
-        // Bu gruptaki son etkinliğin moderatörünü bul
         boolean isModerator = false;
         var last = eventRepo.findTopByGroupIdOrderByCreatedAtDesc(groupId).orElse(null);
         if (last != null && userId != null) {
             isModerator = Objects.equals(last.getCreatedBy(), userId);
         }
-        final boolean isMod = isModerator; // lambda için effectively-final
+        final boolean isMod = isModerator;
 
         return messageRepo.findTop200ByGroupIdOrderByCreatedAtAsc(groupId).stream()
-                // modOnly mesajları moderatör değilse gizle
                 .filter(m -> isMod || !Boolean.TRUE.equals(m.getModOnly()))
                 .map(m -> new UiMessageDto(
                         String.valueOf(m.getId()),
@@ -74,16 +63,13 @@ public class UiController {
                         m.getText(),
                         m.getCreatedAt(),
                         m.isFromMe(),
-                        // system bayrağı artık systemFlag kolonundan geliyor
+
                         Boolean.TRUE.equals(m.getSystemFlag())
                 ))
                 .toList();
     }
 
-    /**
-     * (Opsiyonel) Frontend offline loglamak isterse tek bir mesaj ekleyebilir.
-     * Not: Bot mesajları ve görünürlük (modOnly) için komut akışını kullanın.
-     */
+
     @PostMapping("/messages")
     public UiMessageDto append(@RequestParam String groupId,
                                @RequestParam String userId,
@@ -110,7 +96,6 @@ public class UiController {
         );
     }
 
-    /** Sohbeti temizle (⋮ menüsünden). */
     @DeleteMapping("/messages")
     public Map<String, Object> clear(@RequestParam String groupId) {
         int total = 0;
@@ -123,12 +108,8 @@ public class UiController {
         return Map.of("ok", true, "cleared", total);
     }
 
-    /* ----------------------- EVENT META ------------------------ */
 
-    /**
-     * Frontend’in kartları göstermesi için gerekli meta:
-     * { eventId, published, createdBy }
-     */
+
     @GetMapping("/event-meta")
     public Map<String, Object> eventMeta(@RequestParam String groupId) {
         var e = eventRepo.findTopByGroupIdOrderByCreatedAtDesc(groupId).orElse(null);

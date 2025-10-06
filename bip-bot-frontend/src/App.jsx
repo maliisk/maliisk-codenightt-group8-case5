@@ -1,4 +1,3 @@
-// App.jsx
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   BrowserRouter,
@@ -26,7 +25,6 @@ const COMMANDS = [
   "/ozet",
 ];
 
-// ---- fetch helpers
 async function apiGet(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(await res.text());
@@ -47,7 +45,6 @@ function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // state
   const [currentUserId, setCurrentUserId] = useState(routeUserId);
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
@@ -56,7 +53,7 @@ function AppShell() {
   const messages = messagesByChat[selectedChatId] || [];
 
   const [usersById, setUsersById] = useState({});
-  const [eventMeta, setEventMeta] = useState(null); // {eventId, published, createdBy}
+  const [eventMeta, setEventMeta] = useState(null);
 
   const [survey, setSurvey] = useState(null);
   const [surveyStats, setSurveyStats] = useState(null);
@@ -70,7 +67,6 @@ function AppShell() {
     [usersById]
   );
 
-  /* ---------- users ---------- */
   useEffect(() => {
     (async () => {
       try {
@@ -86,7 +82,6 @@ function AppShell() {
     })();
   }, []);
 
-  /* ---------- chats ---------- */
   useEffect(() => {
     setCurrentUserId(routeUserId);
     (async () => {
@@ -115,7 +110,6 @@ function AppShell() {
         setSelectedChatId(null);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeUserId]);
 
   const chat = useMemo(
@@ -123,7 +117,6 @@ function AppShell() {
     [chats, selectedChatId]
   );
 
-  /* ---------- messages (modOnly filtresi için userId gönder) ---------- */
   useEffect(() => {
     (async () => {
       if (!selectedChatId) return;
@@ -157,7 +150,6 @@ function AppShell() {
     })();
   }, [selectedChatId, chats, currentUserId, nameOf]);
 
-  /* ---------- event meta ---------- */
   const refreshEventMeta = useCallback(async () => {
     if (!selectedChatId) return;
     const picked = chats.find((c) => c.id === selectedChatId);
@@ -179,11 +171,9 @@ function AppShell() {
   const isModeratorOfEvent =
     !!eventMeta && eventMeta.createdBy === currentUserId;
 
-  /* ---------- survey çek + yüzde hesapla ---------- */
   const computeSurveyStats = useCallback((s) => {
     if (!s) return null;
 
-    // slots: yüzdeler YES toplamına göre
     const slotTotalYes = (s.slots || []).reduce(
       (acc, it) => acc + (Number(it.yesCount) || 0),
       0
@@ -195,7 +185,6 @@ function AppShell() {
       return { slotId: it.slotId, start: it.start, end: it.end, count, pct };
     });
 
-    // choices: yüzdeler toplam oy sayısına göre
     const choiceTotal = (s.choices || []).reduce(
       (acc, it) => acc + (Number(it.count) || 0),
       0
@@ -245,7 +234,6 @@ function AppShell() {
     refreshSurvey();
   }, [refreshSurvey]);
 
-  // moderatör görünümünde 5 sn’de bir canlı tazele
   useEffect(() => {
     if (!isModeratorOfEvent) return;
     const id = setInterval(() => {
@@ -254,7 +242,6 @@ function AppShell() {
     return () => clearInterval(id);
   }, [isModeratorOfEvent, refreshSurvey]);
 
-  /* ---------- survey submit ---------- */
   const handleSurveySubmit = useCallback(
     async (payload) => {
       if (!eventMeta?.eventId) return;
@@ -278,7 +265,6 @@ function AppShell() {
     [eventMeta?.eventId, currentUserId, refreshSurvey]
   );
 
-  /* ---------- send ---------- */
   const sendingRef = useRef(false);
   const sendMessage = useCallback(
     async (text) => {
@@ -363,7 +349,6 @@ function AppShell() {
     ]
   );
 
-  /* ---------- clear chat ---------- */
   const handleClearChat = useCallback(async () => {
     if (!chat?.groupId) return;
     try {
@@ -376,7 +361,6 @@ function AppShell() {
     }
   }, [chat, selectedChatId]);
 
-  /* ---------- switch user ---------- */
   const switchUser = (u) => {
     if (!u || u === currentUserId) return;
     setMessagesByChat({});
@@ -385,8 +369,7 @@ function AppShell() {
     );
   };
 
-  /* ---------- render ---------- */
-  const showCards = !!survey && !!(eventMeta?.published || isModeratorOfEvent); // kart/sonuç alanını görünür kıl
+  const showCards = !!survey && !!(eventMeta?.published || isModeratorOfEvent);
 
   return (
     <div className="w-screen h-screen bg-slate-100">
@@ -412,7 +395,6 @@ function AppShell() {
             onClearChat={handleClearChat}
           />
 
-          {/* üst şerit: kullanıcı değiştir */}
           <div className="border-b bg-white px-4 py-2">
             <span className="text-sm text-slate-500">
               Kullanıcı:{" "}
@@ -435,16 +417,14 @@ function AppShell() {
             </span>
           </div>
 
-          {/* içerik */}
           <div className="flex-1 bg-white relative overflow-hidden">
             <div className="absolute inset-0 bg-bip-doodles opacity-40 pointer-events-none" />
             <div className="absolute inset-0 overflow-y-auto">
               <MessageList
                 messages={messages}
-                // anket/artı sonuçlar
                 showCards={showCards}
                 survey={survey}
-                surveyStats={surveyStats} // <-- yüzdeler burada
+                surveyStats={surveyStats}
                 onSurveySubmit={handleSurveySubmit}
                 surveySubmitting={surveySubmitting}
                 isModerator={isModeratorOfEvent}
@@ -463,7 +443,6 @@ function AppShell() {
   );
 }
 
-/** Router sarmalayıcı */
 export default function App() {
   return (
     <BrowserRouter>

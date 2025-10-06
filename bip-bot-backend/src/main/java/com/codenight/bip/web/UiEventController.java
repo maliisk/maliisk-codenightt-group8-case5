@@ -8,14 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/ui/event") // <-- /ui/event-meta ile çakışmaması için
+@RequestMapping("/ui/event")
 @RequiredArgsConstructor
 public class UiEventController {
 
     private final EventRepo eventRepo;
 
-    /** Son etkinliğin meta bilgisi: { eventId, published, createdBy } */
-    @GetMapping("/latest") // <-- yeni endpoint: GET /ui/event/latest?groupId=...
+    @GetMapping("/latest")
     public Map<String, Object> latest(@RequestParam String groupId) {
         Event e = eventRepo.findTopByGroupIdOrderByCreatedAtDesc(groupId).orElse(null);
         if (e == null) {

@@ -1,17 +1,14 @@
-// src/pages/PollPage.jsx
 import { useEffect, useState } from "react";
 import { get, post } from "../api/lib/api";
 import EventHeader from "../components/EventHeader";
 
 export default function PollPage({ eventId, userId }) {
   const [title, setTitle] = useState("");
-  const [poll, setPoll] = useState(null); // {pollId,question,locked,choices:[{choiceId,text,votes}], myChoiceId}
 
   const [newChoice, setNewChoice] = useState("");
   const [creating, setCreating] = useState(false);
 
   const refresh = async () => {
-    // BE: GET /events/{id}/poll → {pollId,question,locked,choices:[{choiceId,text,votes}], myChoiceId}
     const p = await get(`/events/${eventId}/poll`);
     const ev = await get(`/events/${eventId}/summary`);
     setTitle(ev.title);
@@ -36,7 +33,6 @@ export default function PollPage({ eventId, userId }) {
   };
 
   const vote = async (choiceId) => {
-    // optimistic: her kullanıcı tek oy
     setPoll((p) => {
       if (!p) return p;
       const prev = p.myChoiceId;
@@ -61,8 +57,7 @@ export default function PollPage({ eventId, userId }) {
   const addChoice = async (e) => {
     e.preventDefault();
     if (!newChoice.trim() || !poll) return;
-    // küçük bir hile: poll'u yeniden create etmek yerine backend tarafında
-    // "poll'a seçenek ekle" endpointin varsa ona vur; yoksa createPoll paternini uygula.
+
     await post(`/events/${eventId}/poll`, {
       question: poll.question,
       choices: [newChoice.trim()],
@@ -98,13 +93,11 @@ export default function PollPage({ eventId, userId }) {
       <EventHeader eventId={eventId} title={title} onRefresh={refresh} />
 
       <div className="p-4 grid gap-4">
-        {/* Soru */}
         <div className="bg-white p-4 rounded-xl border">
           <div className="text-sm text-slate-500 mb-1">Soru</div>
           <div className="text-lg font-semibold">{poll.question}</div>
         </div>
 
-        {/* Seçenekler & oy verme */}
         <div className="bg-white p-4 rounded-xl border">
           <div className="text-sm text-slate-500 mb-3">Seçenekler</div>
 
